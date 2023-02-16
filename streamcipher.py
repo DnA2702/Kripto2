@@ -20,8 +20,8 @@ def prga(S, P):
         u = S[t] # Keystream
         c = u ^ ord(P[idx])
         hasil += (chr(c))
-    print(hasil)
-    print(hasil.encode("utf-8"))
+    return(hasil)
+    # print(hasil.encode("utf-8"))
     # print(base64.b64encode(bytes(hasil,"utf8")))
     # print(hasil)
     # for character in hasil :
@@ -31,6 +31,6 @@ def keyMakers(K):
     key_tmp = [ord(x) for x in K]
     return key_tmp
 
-plain = input()
-key = input()
-prga(ksa(keyMakers(key)), plain)
+# plain = input()
+# key = input()
+# prga(ksa(keyMakers(key)), plain)

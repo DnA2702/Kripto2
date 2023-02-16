@@ -1,1 +1,0 @@
-print(base64.b64encode(bytes(hasil,"utf-8")))

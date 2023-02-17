@@ -6,6 +6,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QPixmap
 
 from streamcipher import *
+from extended_vigenere import *
 
 import sqlite3
 import os
@@ -14,6 +15,10 @@ import datetime
 import random
 
 class Menu(QMainWindow):
+    
+    temp = ''
+    state = True
+    
     def __init__(self):
         super(Menu, self).__init__()
         loadUi("main.ui", self)
@@ -28,33 +33,30 @@ class Menu(QMainWindow):
         plaintext = self.textEdit.toPlainText()
         key_awal = self.textEdit_2.toPlainText()
         key_tmp = [x for x in key_awal]
-        result = prga(ksa(keyMakers(key_tmp)), plaintext)
+        K = keyMakers(key_tmp)
+        plaintext = [x for x in plaintext]
+        P = extended_vigenere_encrypt(plaintext, create_kunci(plaintext, key_tmp))
+        result = prga(ksa(K), P)
         self.textBrowser.setText(result)
-
-        # keyFinal = create_kunci(plaintext_tmp, key_tmp)
-        # result = extended_vigenere_encrypt(plaintext_tmp, keyFinal)
-        # self.textBrowser.setText(result)
+        Menu.state = True
 
     def Decrypt(self):
-        ciphertext_awal = self.textEdit.toPlainText()
-        ciphertext_tmp = [x for x in ciphertext_awal]
+        ciphertext = self.textEdit.toPlainText()
+        ciphertext = [x for x in ciphertext]
         key_awal = self.textEdit_2.toPlainText()
         key_tmp = [x for x in key_awal]
-        
-        # keyFinal = create_kunci(ciphertext_tmp, key_tmp)
-        # result = extended_vigenere_decrypt(ciphertext_tmp, keyFinal)
-        # self.textBrowser.setText(result)
+        K = keyMakers(key_tmp)
+        temp = prga(ksa(K), ciphertext)
+        result = extended_vigenere_decrypt(temp, create_kunci(temp, key_tmp))
+        self.textBrowser.setText(result)
+        Menu.state = False
     
     def AddFile(self):
-        fname = QFileDialog.getOpenFileName(self, "Choose File", "E:\Kripto\kriptomanjaa", "All Files (*)")
-        text = ""
-        with open(fname[0], "rb") as f:
-            while True:
-                b = f.read(1)
-                if not b:
-                    break
-                text += chr(int.from_bytes(b, byteorder="big"))
-        self.textEdit.setPlainText(str(text))
+        fname = QFileDialog.getOpenFileName(self, "Choose File")
+        bin_data = open(fname[0], "rb").read()
+        string = bin_data.decode("latin1")
+        Menu.temp = string
+        self.textEdit.setPlainText(string)
 
     def Default(self):
         output = []
@@ -69,11 +71,32 @@ class Menu(QMainWindow):
         print()
 
     def Save(self):
-        name = QFileDialog.getSaveFileName(self, "Save File")
-        file = open(name[0], 'w')
-        text = self.textBrowser.toPlainText()
-        file.write(text)
-        file.close()
+        if (Menu.temp == ""):
+            name = QFileDialog.getSaveFileName(self, "Save File")
+            with open(name[0], "wb") as file:
+                file.write(self.textBrowser.toPlainText().encode("latin1"))
+        else:
+            if (Menu.state):
+                name = QFileDialog.getSaveFileName(self, "Save File")
+                key_awal = self.textEdit_2.toPlainText()
+                key_tmp = [x for x in key_awal]
+                K = keyMakers(key_tmp)
+                plaintext = [x for x in Menu.temp]
+                P = extended_vigenere_encrypt(plaintext, create_kunci(plaintext, key_tmp))
+                result = prga(ksa(K), P)
+                with open(name[0], "wb") as file:
+                    file.write(result.encode("latin1"))
+            else:
+                name = QFileDialog.getSaveFileName(self, "Save File")
+                ciphertext = [x for x in Menu.temp]
+                key_awal = self.textEdit_2.toPlainText()
+                key_tmp = [x for x in key_awal]
+                K = keyMakers(key_tmp)
+                temp = prga(ksa(K), ciphertext)
+                result = extended_vigenere_decrypt(temp, create_kunci(temp, key_tmp))
+                with open(name[0], "wb") as file:
+                    file.write(result.encode("latin1"))
+        Menu.temp = ""
 
 # main
 app = QApplication(sys.argv)
